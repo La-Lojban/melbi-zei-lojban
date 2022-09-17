@@ -1,0 +1,32 @@
+{
+  "files": {
+    "main.css": "./static/css/main.c62ed0f6.css",
+    "main.js": "./static/js/main.f3c86617.js",
+    "static/js/47.fc1b82f0.chunk.js": "./static/js/47.fc1b82f0.chunk.js",
+    "static/media/NotoColorEmoji.ttf": "./static/media/NotoColorEmoji.12395461cb06f92bf9dc.ttf",
+    "static/media/jungo.otf": "./static/media/jungo.79d8fdec9b96345e31a9.otf",
+    "static/media/fira-code-zlm.otf": "./static/media/fira-code-zlm.671df008097cc075b384.otf",
+    "static/media/vrude-italic-regular.otf": "./static/media/vrude-italic-regular.ec4a9582243058287a29.otf",
+    "static/media/vrude-regular.otf": "./static/media/vrude-regular.7810864cc52c353a5a93.otf",
+    "service-worker.js": "./service-worker.js",
+    "static/media/dunda-regular.otf": "./static/media/dunda-regular.875c4249790be59fa901.otf",
+    "static/media/balvi-regular.otf": "./static/media/balvi-regular.1c54a76bf4cebca5ec26.otf",
+    "static/media/primihi-regular.otf": "./static/media/primihi-regular.f0e9aa89c499a582d84a.otf",
+    "static/media/ritli-regular.otf": "./static/media/ritli-regular.8fd7f1be5486d6530c9a.otf",
+    "static/media/nerfopi-regular.otf": "./static/media/nerfopi-regular.e45ffe1a990885619b70.otf",
+    "static/media/crisa-regular.otf": "./static/media/crisa-regular.586ae9772563ddacba33.otf",
+    "static/media/tanbo-regular.otf": "./static/media/tanbo-regular.6c81d16b21a46fd15a14.otf",
+    "static/media/piper-karot.otf": "./static/media/piper-karot.2b907ca19eb02aaa2c46.otf",
+    "static/media/unicode-drakono.otf": "./static/media/unicode-drakono.30cec7ac66469850087b.otf",
+    "static/media/crisa-light.otf": "./static/media/crisa-light.0d72fda0e4cdf3cc87be.otf",
+    "static/media/unicode-manri.otf": "./static/media/unicode-manri.6d8d3b48fe021bf9ab41.otf",
+    "index.html": "./index.html",
+    "main.c62ed0f6.css.map": "./static/css/main.c62ed0f6.css.map",
+    "main.f3c86617.js.map": "./static/js/main.f3c86617.js.map",
+    "47.fc1b82f0.chunk.js.map": "./static/js/47.fc1b82f0.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c62ed0f6.css",
+    "static/js/main.f3c86617.js"
+  ]
+}
