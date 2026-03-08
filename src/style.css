@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand-blue: #3b82f6;
+  }
+}
+
+/* Fonts */
+@font-face {
+  font-family: 'emoji';
+  src: url('./fonts/NotoColorEmoji.ttf') format('truetype');
+}
+
+@font-face { font-family: 'crisa'; src: url('./fonts/crisa-regular.otf'); font-weight: 400; }
+@font-face { font-family: 'crisa'; src: url('./fonts/crisa-light.otf'); font-weight: 200; }
+@font-face { font-family: 'crisa-light'; src: url('./fonts/crisa-light.otf'); font-weight: normal; }
+@font-face { font-family: 'crisa-regular'; src: url('./fonts/crisa-regular.otf'); font-weight: normal; }
+
+@font-face {
+  font-family: 'vrude-regular';
+  src: url('./fonts/vrude-regular.otf');
+  font-style: normal;
+  font-weight: normal;
+}
+@font-face {
+  font-family: 'vrude-regular';
+  src: url('./fonts/vrude-italic-regular.otf');
+  font-style: italic;
+  font-weight: normal;
+}
+
+@font-face { font-family: 'ritli-regular'; src: url('./fonts/ritli-regular.otf'); font-weight: normal; }
+@font-face { font-family: 'primihi-regular'; src: url('./fonts/primihi-regular.otf'); font-weight: normal; }
+@font-face { font-family: 'balvi-regular'; src: url('./fonts/balvi-regular.otf'); font-weight: normal; }
+@font-face { font-family: 'dunda-regular'; src: url('./fonts/dunda-regular.otf'); font-weight: normal; }
+@font-face { font-family: 'nerfopi-regular'; src: url('./fonts/nerfopi-regular.otf'); font-weight: normal; }
+@font-face { font-family: 'tanbo-regular'; src: url('./fonts/tanbo-regular.otf'); font-weight: normal; }
+@font-face { font-family: 'fira-code-zlm'; src: url('./fonts/fira-code-zlm.otf'); }
+@font-face { font-family: 'manri'; src: url('./fonts/unicode-manri.otf'); font-weight: normal; }
+@font-face { font-family: 'drakono'; src: url('./fonts/unicode-drakono.otf'); font-weight: normal; }
+@font-face { font-family: 'piper-karot'; src: url('./fonts/piper-karot.otf'); font-weight: normal; }
+@font-face { font-family: 'tisna-bold'; src: url('./fonts/tisna-bold.otf'); font-weight: bold; }
+
+/* Custom Styles */
+#render-container {
+  background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.dark #render-container {
+  background-image: radial-gradient(circle, #1e293b 1px, transparent 1px);
+}
+
+/* Transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--brand-blue);
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--brand-blue);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+}
