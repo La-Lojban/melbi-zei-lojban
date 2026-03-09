@@ -26,4 +26,5 @@ export const FONTS: FontDef[] = [
   { name: 'Drakono', value: 'drakono', line: 1.2 },
   { name: 'Piper Karot', value: 'piper-karot', line: 1.2 },
   { name: 'Tisna', value: 'tisna-bold', line: 1.2 },
+  { name: 'MV Randhoo (Thaana)', value: 'mv-randhoo', line: 1.5 },
 ];
