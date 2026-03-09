@@ -54,7 +54,10 @@ const canvasTxt = {
     const yEnd = y + height;
 
     const { fontStyle, fontVariant, fontWeight, fontSize, font } = this;
-    const style = `${fontStyle} ${fontVariant} ${fontWeight} ${fontSize}px ${font}`;
+    const fontParts = [fontStyle, fontVariant, fontWeight, `${fontSize}px`, `"${font}"`].filter(
+      (part) => part && part.trim()
+    );
+    const style = fontParts.join(' ');
     ctx.font = style;
 
     let txtY = y + height / 2 + parseInt(this.fontSize.toString()) / 2;

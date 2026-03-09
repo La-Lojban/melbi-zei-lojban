@@ -44,43 +44,90 @@ export async function renderToCanvas(
 
   const ratio = window.devicePixelRatio || 1;
   const container = document.getElementById('render-container');
-  const w = (container?.clientWidth || 300) - 20;
-  
-  // Initial height
-  let h = 100;
+  // container has p-4 (16px each side = 32px total); subtract padding so text fits exactly
+  const containerPadding = 32;
+  const containerWidth = container?.clientWidth ?? 300;
+  const w = Math.max(containerWidth - containerPadding, 100);
+
+  const isMobile = containerWidth <= 640;
+  // On mobile: use a taller canvas (min height from viewport) so we can center and scale text
+  const mobileMinHeight =
+    isMobile ? Math.min(Math.round(window.innerHeight * 0.4), 360) : 0;
+
+  // Small uniform padding above/below the text block (in logical px)
+  let vPadding = Math.round(size * 0.3);
 
   const w_ = w * ratio;
-  const h_ = h * ratio;
-
+  const scratchH = 4000 * ratio;
   canvas.width = w_;
-  canvas.height = h_;
+  canvas.height = scratchH;
   canvas.style.width = `${w}px`;
-  canvas.style.height = `${h}px`;
 
   const processedText = preprocess({ text: (text || '').trim(), font: family });
 
-  // First pass to get height
-  const { height } = canvasTxt.drawText(ctx, processedText, 0, size / 3, w_, h_);
+  // Measure pass: get text block height at current size
+  let { height: contentHeight } = canvasTxt.drawText(
+    ctx,
+    processedText,
+    0,
+    vPadding * ratio,
+    w_,
+    scratchH
+  );
 
-  // Adjust height and redraw
-  const finalHeight = Math.max(height + (size * 2) / 3, 50);
-  const finalHeight_ = finalHeight * ratio;
+  let finalHeight = Math.max(contentHeight + vPadding * 2, 40);
+  let drawSize = size;
+  let useMiddle = false;
+
+  if (isMobile && mobileMinHeight > 0 && finalHeight < mobileMinHeight) {
+    finalHeight = mobileMinHeight;
+    const targetContent = finalHeight * 0.9 - vPadding * 2;
+    if (targetContent > contentHeight && contentHeight > 0) {
+      const scale = Math.min(targetContent / contentHeight, 2);
+      drawSize = Math.min(Math.round(size * scale), 200);
+      drawSize = Math.max(drawSize, size);
+      canvasTxt.fontSize = drawSize;
+      canvasTxt.lineHeight = (fontDef.line || 1.2) * drawSize;
+      vPadding = Math.round(drawSize * 0.3);
+      const measureAgain = canvasTxt.drawText(
+        ctx,
+        processedText,
+        0,
+        vPadding * ratio,
+        w_,
+        scratchH
+      );
+      contentHeight = measureAgain.height;
+    }
+    useMiddle = true;
+    canvasTxt.vAlign = 'middle';
+  } else {
+    canvasTxt.vAlign = 'top';
+  }
+
+  const finalHeight_ = Math.round(finalHeight * ratio);
 
   canvas.height = finalHeight_;
   canvas.style.height = `${finalHeight}px`;
-  
-  // Redraw with correct height
+
   ctx.clearRect(0, 0, w_, finalHeight_);
-  
-  // Draw background (white)
+
   ctx.globalCompositeOperation = 'destination-over';
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, w_, finalHeight_);
   ctx.globalCompositeOperation = 'source-over';
 
-  // Fill text
-  ctx.fillStyle = 'black'; // Text is always black on white canvas for export
-  canvasTxt.drawText(ctx, processedText, 0, size / 3, w_, finalHeight_);
+  ctx.fillStyle = 'black';
+  if (useMiddle) {
+    canvasTxt.drawText(ctx, processedText, 0, 0, w_, finalHeight_);
+  } else {
+    canvasTxt.drawText(ctx, processedText, 0, vPadding * ratio, w_, finalHeight_);
+  }
+
+  // Restore canvas-txt for next render (size/lineHeight set below on each call anyway)
+  canvasTxt.fontSize = size;
+  canvasTxt.lineHeight = (fontDef.line || 1.2) * size;
+  canvasTxt.vAlign = 'top';
 
   // Update image
   image.src = canvas.toDataURL('image/webp', 1.0);
