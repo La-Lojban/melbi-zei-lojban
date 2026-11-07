@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/mv-randhoo-regular-DMnbuo1E.ttf`;export{e as default};

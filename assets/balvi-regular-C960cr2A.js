@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/balvi-regular-EmJeFbW8.otf`;export{e as default};

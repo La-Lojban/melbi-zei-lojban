@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/tisna-bold-Cmz2BGiM.otf`;export{e as default};

@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/NotoColorEmoji-D-RH2EMr.ttf`;export{e as default};

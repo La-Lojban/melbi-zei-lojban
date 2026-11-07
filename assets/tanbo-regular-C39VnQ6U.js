@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/tanbo-regular-BmekkL30.otf`;export{e as default};

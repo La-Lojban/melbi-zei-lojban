@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/ritli-regular-CbbgYQkq.otf`;export{e as default};

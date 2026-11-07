@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/dunda-regular-Cf1gFvfr.otf`;export{e as default};

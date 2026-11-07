@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/primihi-regular-DMf3U9HV.otf`;export{e as default};

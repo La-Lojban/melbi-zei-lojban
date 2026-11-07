@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/vrude-regular-Bywj-MjS.otf`;export{e as default};

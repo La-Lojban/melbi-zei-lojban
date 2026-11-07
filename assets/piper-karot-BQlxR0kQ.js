@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/piper-karot-CT95cBQ3.otf`;export{e as default};

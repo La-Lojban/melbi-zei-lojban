@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/unicode-drakono-Bxyb2C3C.otf`;export{e as default};

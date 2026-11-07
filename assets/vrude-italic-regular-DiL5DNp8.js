@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/vrude-italic-regular-BO6jbLC7.otf`;export{e as default};

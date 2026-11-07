@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/crisa-light-BLDKZjLA.otf`;export{e as default};

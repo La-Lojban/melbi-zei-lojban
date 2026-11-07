@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/crisa-regular-DQFElvA3.otf`;export{e as default};

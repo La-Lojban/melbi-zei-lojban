@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/nerfopi-regular-B_1zuA2k.otf`;export{e as default};

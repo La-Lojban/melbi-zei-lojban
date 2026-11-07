@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/fira-code-zlm-CHJBgy9B.otf`;export{e as default};

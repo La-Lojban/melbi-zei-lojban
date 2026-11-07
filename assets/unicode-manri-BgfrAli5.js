@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/unicode-manri-_0u8mDCK.otf`;export{e as default};
