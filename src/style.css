@@ -45,6 +45,20 @@
 @font-face { font-family: 'tisna-bold'; src: url('./fonts/tisna-bold.otf') format('opentype'); font-style: normal; font-weight: bold; }
 @font-face { font-family: 'mv-randhoo'; src: url('./fonts/mv-randhoo-regular.ttf') format('truetype'); font-style: normal; font-weight: normal; }
 
+/* System faces that cover Greek, Cyrillic, and Coptic. Canvas quotes the family name. */
+@font-face {
+  font-family: 'krulermorna-greek';
+  src: local('DejaVu Sans'), local('Noto Sans'), local('Liberation Sans'), local('FreeSans');
+}
+@font-face {
+  font-family: 'krulermorna-cyrillic';
+  src: local('DejaVu Sans'), local('Noto Sans'), local('Liberation Sans'), local('FreeSans');
+}
+@font-face {
+  font-family: 'coptic';
+  src: local('Noto Sans Coptic'), local('DejaVu Sans'), local('Noto Sans');
+}
+
 /* Custom Styles */
 #render-container {
   background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);

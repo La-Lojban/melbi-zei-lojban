@@ -14,6 +14,188 @@ export function krulermorna(t: string): string {
     .replace(/\./g, '');
 }
 
+/**
+ * la krulermorna as implemented in La-Lojban/lojban (`src/ceha/vrici.ts`):
+ * i/u glides become ɩ/w, and the four falling diphthongs become single letters.
+ * Kept separate from {@link krulermorna}, which the Zbalermorna path depends on.
+ */
+export function krulermornaOfficial(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/h/g, "'")
+    .replace(/([ptkflscmxbdgvrzjnaeiouy.\s])u([aeiouy])/g, '$1w$2')
+    .replace(/([ptkflscmxbdgvrzjnaeiouy.\s])i([aeiouy])/g, '$1ɩ$2')
+    .replace(/^u([aeiouy])/g, 'w$1')
+    .replace(/^i([aeiouy])/g, 'ɩ$1')
+    .replace(/au/g, 'ḁ')
+    .replace(/ai/g, 'ą')
+    .replace(/ei/g, 'ę')
+    .replace(/oi/g, 'ǫ');
+}
+
+function applyMap(text: string, pairs: [string, string][]): string {
+  const ordered = [...pairs].sort((a, b) => b[0].length - a[0].length);
+  let out = '';
+  let i = 0;
+  while (i < text.length) {
+    const hit = ordered.find(([from]) => text.startsWith(from, i));
+    if (hit) {
+      out += hit[1];
+      i += hit[0].length;
+    } else {
+      out += text[i];
+      i += 1;
+    }
+  }
+  return out;
+}
+
+/**
+ * Greek edition of la krulermorna.
+ * Letter pairs from https://mw.lojban.org/papri/Talk:la_krulermorna
+ * after the La-Lojban krulermorna rewrite (glides and falling diphthongs).
+ *
+ * y (schwa) is not on that page; it is written ϋ so it stays distinct from υ.
+ * c is /ʃ/, so it is the Greek letter sho ϸ rather than the talk page's ϸϡ.
+ * Apostrophe + diphthong takes rough breathing on the diphthong letter
+ * (ᾁ ᾑ ᾡ ἇ), matching the listed 'V breathing vowels.
+ */
+export function latinToKrulermornaGreek(input: string): string {
+  const kruler = krulermornaOfficial(input);
+  return applyMap(kruler, [
+    ["'ą", 'ᾁ'],
+    ["'ę", 'ᾑ'],
+    ["'ǫ", 'ᾡ'],
+    ["'ḁ", 'ἇ'],
+    ["'a", 'ἁ'],
+    ["'e", 'ἑ'],
+    ["'i", 'ἱ'],
+    ["'o", 'ὁ'],
+    ["'u", 'ὑ'],
+    ['ą', 'ᾳ'],
+    ['ę', 'ῃ'],
+    ['ǫ', 'ῳ'],
+    ['ḁ', 'ᾶ'],
+    ['ɩ', 'ι'],
+    ['w', 'υ'],
+    ['a', 'α'],
+    ['e', 'ε'],
+    ['i', 'ι'],
+    ['o', 'ο'],
+    ['u', 'υ'],
+    ['y', 'ϋ'],
+    ['b', 'β'],
+    ['c', 'ϸ'],
+    ['d', 'δ'],
+    ['f', 'φ'],
+    ['g', 'γ'],
+    ['j', 'ζζ'],
+    ['k', 'κ'],
+    ['l', 'λ'],
+    ['m', 'μ'],
+    ['n', 'ν'],
+    ['p', 'π'],
+    ['r', 'ρ'],
+    ['s', 'σ'],
+    ['t', 'τ'],
+    ['v', 'ϝ'],
+    ['x', 'χ'],
+    ['z', 'ζ'],
+  ]);
+}
+
+/**
+ * Cyrillic edition of la krulermorna.
+ * Vowels, falling diphthongs, and i/u-glides from
+ * https://mw.lojban.org/papri/Talk:la_krulermorna (Cyrillic edition).
+ * Consonants follow `rukylermorna` in La-Lojban/lojban, which that page does not list.
+ *
+ * Open cells on the talk page: y is ы (the first of ы/ъ); iy is йы.
+ */
+export function latinToKrulermornaCyrillic(input: string): string {
+  const kruler = krulermornaOfficial(input);
+  return applyMap(kruler, [
+    ['ą', 'ай'],
+    ['ę', 'эй'],
+    ['ǫ', 'ой'],
+    ['ḁ', 'аў'],
+    ['ɩa', 'я'],
+    ['ɩe', 'е'],
+    ['ɩi', 'ї'],
+    ['ɩo', 'ё'],
+    ['ɩu', 'ю'],
+    ['ɩy', 'йы'],
+    ['wa', 'ўа'],
+    ['we', 'ўэ'],
+    ['wi', 'ўи'],
+    ['wo', 'ўо'],
+    ['wu', 'ўу'],
+    ['wy', 'ўы'],
+    ['ɩ', 'й'],
+    ['w', 'ў'],
+    ['a', 'а'],
+    ['e', 'э'],
+    ['i', 'и'],
+    ['o', 'о'],
+    ['u', 'у'],
+    ['y', 'ы'],
+    ['f', 'ф'],
+    ['v', 'в'],
+    ['x', 'х'],
+    ['s', 'с'],
+    ['z', 'з'],
+    ['c', 'ш'],
+    ['j', 'ж'],
+    ['p', 'п'],
+    ['b', 'б'],
+    ['t', 'т'],
+    ['d', 'д'],
+    ['k', 'к'],
+    ['g', 'г'],
+    ['l', 'л'],
+    ['r', 'р'],
+    ['m', 'м'],
+    ['n', 'н'],
+  ]);
+}
+
+/**
+ * Coptic orthography: one Coptic letter per Lojban phoneme (Unicode Coptic block).
+ * c → ϣ (shei, /ʃ/), j → ϫ (gangia), x → ϧ (khei), ' → ϩ (hori), f → ϥ (fei).
+ * v is ⲃ plus diaeresis so it stays distinct from b ⲃ. y is ⲏ, distinct from e ⲉ.
+ * Diphthongs stay letter sequences (ⲁⲓ, ⲁⲩ, …).
+ */
+const COPTIC_MAP: [string, string][] = [
+  ['a', 'ⲁ'],
+  ['e', 'ⲉ'],
+  ['i', 'ⲓ'],
+  ['o', 'ⲟ'],
+  ['u', 'ⲩ'],
+  ['y', 'ⲏ'],
+  ['b', 'ⲃ'],
+  ['c', 'ϣ'],
+  ['d', 'ⲇ'],
+  ['f', 'ϥ'],
+  ['g', 'ⲅ'],
+  ['j', 'ϫ'],
+  ['k', 'ⲕ'],
+  ['l', 'ⲗ'],
+  ['m', 'ⲙ'],
+  ['n', 'ⲛ'],
+  ['p', 'ⲡ'],
+  ['r', 'ⲣ'],
+  ['s', 'ⲥ'],
+  ['t', 'ⲧ'],
+  ['v', 'ⲃ\u0308'],
+  ['x', 'ϧ'],
+  ['z', 'ⲍ'],
+  ["'", 'ϩ'],
+];
+
+export function latinToCoptic(input: string): string {
+  return applyMap(input.toLowerCase().replace(/h/g, "'"), COPTIC_MAP);
+}
+
 export function cohukrulermorna(t: string): string {
   return t
     .replace(/w/g, 'u')
@@ -290,6 +472,12 @@ export function preprocess({ text, font }: { text: string; font: string }): stri
     return zbalermornaize({ w: '', ot, rfs });
   } else if (font === 'mv-randhoo') {
     return latinToThaana(text);
+  } else if (font === 'krulermorna-greek') {
+    return latinToKrulermornaGreek(text);
+  } else if (font === 'krulermorna-cyrillic') {
+    return latinToKrulermornaCyrillic(text);
+  } else if (font === 'coptic') {
+    return latinToCoptic(text);
   } else if (['modzi', 'emoji'].includes(font)) {
     return modzi(text, false) as string;
   } else {
