@@ -1,5 +1,6 @@
 import { FONTS, AppState } from './types';
 import { renderToCanvas } from './renderer';
+import { preloadFontsInBackground } from './font-loader';
 
 const STORAGE_KEY = 'melbi-zei-lojban-state';
 const URL_PARAM_TEXT = 'text';
@@ -192,8 +193,11 @@ export function initApp(): void {
     localStorage.setItem('theme', state.theme);
   });
 
-  // Initial render
-  setTimeout(() => triggerRender(), 500);
+  // Initial render, then warm the other faces one at a time.
+  setTimeout(() => {
+    triggerRender();
+    preloadFontsInBackground(state.family);
+  }, 500);
 
   let renderTimeout: number | null = null;
   function triggerRender() {
