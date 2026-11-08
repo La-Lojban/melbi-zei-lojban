@@ -98,8 +98,9 @@ const canvasTxt = {
             texttoprint = split(temptext).slice(0, textlen).join('');
             textpixlen = ctx.measureText(texttoprint).width;
           }
-          // Remove last character that was out of the box
-          textlen--;
+          // Always consume at least one character, even when a single glyph
+          // is wider than the available space on a narrow screen.
+          textlen = Math.max(1, textlen - 1);
           texttoprint = split(temptext).slice(0, textlen).join('');
 
           // Ensurs a new line only happens at a space

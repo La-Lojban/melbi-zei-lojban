@@ -193,6 +193,20 @@ export function initApp(): void {
     localStorage.setItem('theme', state.theme);
   });
 
+  // Re-wrap after a viewport resize or phone rotation, including when the
+  // preview was previously rendered at a much narrower width.
+  const container = document.getElementById('render-container');
+  if (container) {
+    let previousWidth = container.clientWidth;
+    new ResizeObserver(() => {
+      const width = container.clientWidth;
+      if (width !== previousWidth) {
+        previousWidth = width;
+        triggerRender();
+      }
+    }).observe(container);
+  }
+
   // Initial render, then warm the other faces one at a time.
   setTimeout(() => {
     triggerRender();
