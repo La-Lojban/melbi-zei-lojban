@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/tibetan-modern-a-B4GBPgHf.ttf`;export{e as default};

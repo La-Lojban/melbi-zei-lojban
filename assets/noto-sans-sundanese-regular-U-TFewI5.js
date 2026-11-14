@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/noto-sans-sundanese-regular-DKCL2REq.ttf`;export{e as default};
