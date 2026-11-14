@@ -32,4 +32,5 @@ export const FONTS: FontDef[] = [
   { name: 'krulermorna (Greek)', value: 'krulermorna-greek', line: 1.35 },
   { name: 'krulermorna (Cyrillic)', value: 'krulermorna-cyrillic', line: 1.35 },
   { name: 'Coptic', value: 'coptic', line: 1.35 },
+  { name: 'Brolermorna (Hebrew)', value: 'brolermorna', line: 1.5 },
 ];

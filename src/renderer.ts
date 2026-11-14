@@ -57,6 +57,7 @@ export async function renderToCanvas(
   // mixing the two made high-DPI previews much taller than the visible text.
   canvas.width = Math.ceil(width * ratio);
   canvas.height = 1;
+  ctx.direction = family === 'brolermorna' ? 'rtl' : 'ltr';
   const { height: contentHeight } = canvasTxt.drawText(
     ctx, processedText, 0, padding, width, 1
   );
@@ -66,6 +67,7 @@ export async function renderToCanvas(
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
   ctx.scale(ratio, ratio);
+  ctx.direction = family === 'brolermorna' ? 'rtl' : 'ltr';
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = 'black';

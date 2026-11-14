@@ -1,4 +1,4 @@
-import { modzi } from 'lojban';
+import { modzi, romoi_lahi_cmaxes } from 'lojban';
 
 export function krulermorna(t: string): string {
   return t
@@ -755,6 +755,69 @@ export function latinToTibetan(input: string): string {
   return text.trim();
 }
 
+// Brolermorna, la tcidjan.: https://jbotcan.org/lojban-images/vaxmuli/ebde.pdf
+const BROLERMORNA_CONSONANTS: Record<string, string> = {
+  p: 'פ', t: 'ת', k: 'כ', f: 'ט', s: 'ס', c: 'ש',
+  b: 'ב', d: 'ד', g: 'ג', v: 'ע', z: 'ז', j: 'צ',
+  m: 'מ', n: 'נ', l: 'ל', r: 'ר', x: 'ח', "'": 'ה',
+};
+const BROLERMORNA_FINALS: Record<string, string> = {
+  p: 'ף', k: 'ך', j: 'ץ', m: 'ם', n: 'ן', x: 'ק',
+};
+const BROLERMORNA_VOWELS: Record<string, string> = {
+  a: '\u05b7', e: '\u05b6', i: '\u05b4', o: '\u05b8', u: '\u05bb',
+};
+
+/** Hebrew abugida; return logical Unicode order (never reverse RTL text). */
+export function latinToBrolermorna(input: string): string {
+  return input.replace(/[a-zA-Z'’]+/g, (word) => {
+    const normalized = word.replace(/’/g, "'").replace(/h/gi, "'");
+    const lower = normalized.toLowerCase();
+    // The proposal uses holam for brivla y, but sheva for cmavo/cmevla y.
+    let isBrivla = false;
+    if (lower.includes('y')) {
+      const parsed = romoi_lahi_cmaxes(lower);
+      const tokens = parsed['te spuda'];
+      isBrivla = parsed.tcini === 'snada' && Array.isArray(tokens) &&
+        tokens.length === 1 && ['gismu', 'lujvo', "fu'ivla", 'fuhivla']
+          .includes(tokens[0][0]);
+    }
+
+    let out = '';
+    let base = '';
+    const flush = () => { out += base; base = ''; };
+    for (let i = 0; i < lower.length; i++) {
+      const ch = lower[i];
+      const next = lower[i + 1] ?? '';
+      if (BROLERMORNA_CONSONANTS[ch]) {
+        flush();
+        base = (i === lower.length - 1 ? BROLERMORNA_FINALS[ch] : '') ||
+          BROLERMORNA_CONSONANTS[ch];
+      } else if ((ch === 'i' || ch === 'u') && /[aeiouy]/.test(next)) {
+        flush();
+        base = ch === 'i' ? 'י' : 'ו';
+      } else if (/[aeiouy]/.test(ch)) {
+        if (!base) base = 'א';
+        const mark = ch === 'y'
+          ? (isBrivla ? (base === 'ו' ? '\u05ba' : '\u05b9') : '\u05b0')
+          : BROLERMORNA_VOWELS[ch];
+        const stressed = normalized[i] !== ch;
+        base += mark + (stressed ? '\u05ab' : '');
+        if (isFallingDiphthong(ch, next)) {
+          base += next === 'u' ? 'ו' : 'י';
+          i++;
+        }
+        flush();
+      } else {
+        flush();
+        out += normalized[i];
+      }
+    }
+    flush();
+    return out;
+  });
+}
+
 export function preprocess({ text, font }: { text: string; font: string }): string {
   const zbalermornaFonts = [
     'crisa',
@@ -795,6 +858,8 @@ export function preprocess({ text, font }: { text: string; font: string }): stri
     return latinToKrulermornaCyrillic(text);
   } else if (font === 'coptic') {
     return latinToCoptic(text);
+  } else if (font === 'brolermorna') {
+    return latinToBrolermorna(text);
   } else if (['modzi', 'emoji'].includes(font)) {
     return modzi(text, false) as string;
   } else {

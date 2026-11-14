@@ -23,6 +23,11 @@
   src: local('Noto Sans Coptic'), local('DejaVu Sans'), local('Noto Sans');
 }
 
+@font-face {
+  font-family: 'brolermorna';
+  src: local('Noto Sans Hebrew'), local('DejaVu Sans'), local('Arial');
+}
+
 /* Custom Styles */
 #render-container {
   background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);

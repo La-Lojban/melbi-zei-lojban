@@ -55,6 +55,7 @@ const SYSTEM_FAMILIES = new Set([
   'krulermorna-greek',
   'krulermorna-cyrillic',
   'coptic',
+  'brolermorna',
 ]);
 
 async function registerFileFaces(specs: FaceSpec[]): Promise<void> {
