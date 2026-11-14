@@ -27,6 +27,8 @@ export const FONTS: FontDef[] = [
   { name: 'Piper Karot', value: 'piper-karot', line: 1.2 },
   { name: 'Tisna', value: 'tisna-bold', line: 1.2 },
   { name: 'MV Randhoo (Thaana)', value: 'mv-randhoo', line: 1.5 },
+  { name: "su'unda (Sundanese)", value: 'sundanese', line: 1.5 },
+  { name: 'utco (Tibetan)', value: 'tibetan', line: 1.6 },
   { name: 'krulermorna (Greek)', value: 'krulermorna-greek', line: 1.35 },
   { name: 'krulermorna (Cyrillic)', value: 'krulermorna-cyrillic', line: 1.35 },
   { name: 'Coptic', value: 'coptic', line: 1.35 },

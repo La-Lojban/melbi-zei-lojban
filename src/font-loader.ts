@@ -33,6 +33,18 @@ const FACE_FILES: Record<string, FaceSpec[]> = {
   'piper-karot': [{ family: 'piper-karot', file: () => import('./fonts/piper-karot.otf?url') }],
   'tisna-bold': [{ family: 'tisna-bold', weight: 'bold', file: () => import('./fonts/tisna-bold.otf?url') }],
   'mv-randhoo': [{ family: 'mv-randhoo', file: () => import('./fonts/mv-randhoo-regular.ttf?url') }],
+  sundanese: [
+    {
+      family: 'sundanese',
+      file: () => import('./fonts/noto-sans-sundanese-regular.ttf?url'),
+    },
+  ],
+  tibetan: [
+    {
+      family: 'tibetan',
+      file: () => import('./fonts/tibetan-modern-a.ttf?url'),
+    },
+  ],
 };
 
 const SYSTEM_FAMILIES = new Set([
