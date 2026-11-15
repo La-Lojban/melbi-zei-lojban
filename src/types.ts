@@ -32,5 +32,17 @@ export const FONTS: FontDef[] = [
   { name: 'krulermorna (Greek)', value: 'krulermorna-greek', line: 1.35 },
   { name: 'krulermorna (Cyrillic)', value: 'krulermorna-cyrillic', line: 1.35 },
   { name: 'Coptic', value: 'coptic', line: 1.35 },
-  { name: 'Brolermorna (Hebrew)', value: 'brolermorna', line: 1.5 },
+  { name: 'brolermorna (Hebrew)', value: 'brolermorna', line: 1.5 },
 ];
+
+/** Orthographies whose converted output is real Unicode (copyable as text). */
+export const UTF_COPY_FONTS = new Set([
+  'emoji',
+  'mv-randhoo',
+  'sundanese',
+  'tibetan',
+  'krulermorna-greek',
+  'krulermorna-cyrillic',
+  'coptic',
+  'brolermorna',
+]);

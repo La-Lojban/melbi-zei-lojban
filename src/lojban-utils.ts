@@ -1,36 +1,42 @@
 import { modzi, romoi_lahi_cmaxes } from 'lojban';
 
-export function krulermorna(t: string): string {
-  return t
-    .replace(/\./g, '')
-    .replace(/^/, '.')
-    .toLowerCase()
-    .replace(/([aeiou.])u([aeiou])/g, '$1w$2')
-    .replace(/([aeiou.])i([aeiou])/g, '$1ɩ$2')
-    .replace(/au/g, 'ḁ')
-    .replace(/ai/g, 'ą')
-    .replace(/ei/g, 'ę')
-    .replace(/oi/g, 'ǫ')
-    .replace(/\./g, '');
+/**
+ * Rising iV/uV at word start (after ^, space, or pause) bind left-to-right
+ * *before* medial VuV → VwV, so "iuuinai" → ɩuwiną (iu+ui+nai), not iwuiną.
+ * After a consonant, Ciua still becomes Ciwa via the medial pass.
+ */
+function applyRisingAndMedialGlides(text: string): string {
+  return text
+    .replace(/(^|[.\s])u([aeiouy])/g, '$1w$2')
+    .replace(/(^|[.\s])i([aeiouy])/g, '$1ɩ$2')
+    .replace(/([ptkflscmxbdgvrzjnaeiouy.'])u([aeiouy])/g, '$1w$2')
+    .replace(/([ptkflscmxbdgvrzjnaeiouy.'])i([aeiouy])/g, '$1ɩ$2');
 }
 
-/**
- * la krulermorna as implemented in La-Lojban/lojban (`src/ceha/vrici.ts`):
- * i/u glides become ɩ/w, and the four falling diphthongs become single letters.
- * Kept separate from {@link krulermorna}, which the Zbalermorna path depends on.
- */
-export function krulermornaOfficial(text: string): string {
+function applyFallingDiphthongs(text: string): string {
   return text
-    .toLowerCase()
-    .replace(/h/g, "'")
-    .replace(/([ptkflscmxbdgvrzjnaeiouy.\s])u([aeiouy])/g, '$1w$2')
-    .replace(/([ptkflscmxbdgvrzjnaeiouy.\s])i([aeiouy])/g, '$1ɩ$2')
-    .replace(/^u([aeiouy])/g, 'w$1')
-    .replace(/^i([aeiouy])/g, 'ɩ$1')
     .replace(/au/g, 'ḁ')
     .replace(/ai/g, 'ą')
     .replace(/ei/g, 'ę')
     .replace(/oi/g, 'ǫ');
+}
+
+export function krulermorna(t: string): string {
+  return applyFallingDiphthongs(
+    applyRisingAndMedialGlides(
+      t.replace(/\./g, '').replace(/^/, '.').toLowerCase()
+    )
+  ).replace(/\./g, '');
+}
+
+/**
+ * la krulermorna glide/diphthong rewrite for Greek/Cyrillic/Brolermorna paths.
+ * Word-initial rising diphthongs bind before medial u→w (Lojban left-to-right).
+ */
+export function krulermornaOfficial(text: string): string {
+  return applyFallingDiphthongs(
+    applyRisingAndMedialGlides(text.toLowerCase().replace(/h/g, "'"))
+  );
 }
 
 function applyMap(text: string, pairs: [string, string][]): string {
@@ -448,23 +454,21 @@ function convertWordToThaana(word: string): string {
 //
 // zunsna (consonant bases, inherent a):
 //   k ᮊ  g ᮌ  c ᮎ  j ᮏ  t ᮒ  d ᮓ  n ᮔ
-//   p ᮕ  b ᮘ  m ᮙ  f ᮖ  v ᮗ  x ᮍ  s ᮞ  z ᮐ
+//   p ᮕ  b ᮘ  m ᮙ  f ᮖ  v ᮗ  x ᮋ  s ᮞ  z ᮐ
 //   r ᮛ  l ᮜ  ' ᮠ
-//   (x uses nga ᮍ per the chart; v uses va ᮗ)
 //
 // salsna (rising-glide bases):
 //   i-glide ᮚ (ya)   u-glide ᮝ (wa)
 //
 // karsna (independent vowels):
-//   .a ᮃ  .i ᮄ  .u ᮅ  .e ᮈ  .o ᮇ  .y ᮉ
+//   .a ᮃ  .i ᮄ  .u ᮅ  .e ᮆ  .o ᮇ  .y ᮈ
 //
 // minle'u karsna (vowel signs on a consonant):
 //   a (inherent)  y ᮨ  i ᮤ  e ᮦ  u ᮥ  o ᮧ
 //
 // pamaéh ᮪ kills the inherent vowel (clusters / final consonants).
-// Syllable-final glides use the same vowel signs as medial vowels
-// (e.g. .au → ᮃᮥ, loi → ᮜᮤᮧ). Encode vowel signs in shaping order:
-// left (e), above (i), then right (o), rather than pronunciation order.
+// Falling diphthong offglides use independent ᮄ / ᮅ
+// (e.g. .au → ᮃᮅ, loi → ᮜᮧᮄ).
 
 const SUNDANESE_CONSONANTS: Record<string, string> = {
   k: 'ᮊ',
@@ -479,7 +483,7 @@ const SUNDANESE_CONSONANTS: Record<string, string> = {
   m: 'ᮙ',
   f: 'ᮖ',
   v: 'ᮗ',
-  x: 'ᮍ',
+  x: 'ᮋ',
   s: 'ᮞ',
   z: 'ᮐ',
   r: 'ᮛ',
@@ -487,14 +491,14 @@ const SUNDANESE_CONSONANTS: Record<string, string> = {
   "'": 'ᮠ',
 };
 
-/** Independent vowel letters (word-initial / after pause). */
+/** Independent vowel letters (word-initial / after pause / diphthong offglide). */
 const SUNDANESE_INDEPENDENT: Record<string, string> = {
   a: 'ᮃ',
   i: 'ᮄ',
   u: 'ᮅ',
-  e: 'ᮈ',
+  e: 'ᮆ',
   o: 'ᮇ',
-  y: 'ᮉ',
+  y: 'ᮈ',
 };
 
 /**
@@ -526,6 +530,16 @@ function isFallingDiphthong(first: string, second: string): boolean {
 }
 
 /**
+ * Glide rewrite only (same order as {@link krulermornaOfficial}).
+ * Falling diphthongs stay ai/au/ei/oi for Sundanese spelling.
+ */
+function sundaneseGlideRewrite(word: string): string {
+  return applyRisingAndMedialGlides(
+    word.toLowerCase().replace(/h/g, "'").replace(/,/g, '')
+  );
+}
+
+/**
  * Convert Lojban Latin text into Sundanese script
  * (su'unda selyle'u co lojbo).
  */
@@ -545,7 +559,7 @@ export function latinToSundanese(input: string): string {
 function convertWordToSundanese(word: string): string {
   if (!word) return '';
 
-  const chars = Array.from(word.replace(/,/g, ''));
+  const chars = Array.from(sundaneseGlideRewrite(word));
   let out = '';
   let i = 0;
 
@@ -554,16 +568,11 @@ function convertWordToSundanese(word: string): string {
     const next = chars[i + 1] ?? '';
     const afterNext = chars[i + 2] ?? '';
 
-    // Rising i-glide: ia ie ii io iu iy → ya + vowel sign
-    if (ch === 'i' && SUNDANESE_VOWELS.has(next)) {
-      out += SUNDANESE_YA + (SUNDANESE_VOWEL_SIGN[next] ?? '');
-      i += 2;
-      continue;
-    }
-
-    // Rising u-glide: ua ue ui uo uu uy → wa + vowel sign
-    if (ch === 'u' && SUNDANESE_VOWELS.has(next)) {
-      out += SUNDANESE_WA + (SUNDANESE_VOWEL_SIGN[next] ?? '');
+    // Rising glides after krulermorna rewrite: ɩV → ya, wV → wa
+    if ((ch === 'ɩ' || ch === 'w') && SUNDANESE_VOWELS.has(next)) {
+      out +=
+        (ch === 'ɩ' ? SUNDANESE_YA : SUNDANESE_WA) +
+        (SUNDANESE_VOWEL_SIGN[next] ?? '');
       i += 2;
       continue;
     }
@@ -572,7 +581,8 @@ function convertWordToSundanese(word: string): string {
     if (SUNDANESE_VOWELS.has(ch)) {
       if (isFallingDiphthong(ch, next)) {
         out +=
-          (SUNDANESE_INDEPENDENT[ch] ?? ch) + (SUNDANESE_VOWEL_SIGN[next] ?? '');
+          (SUNDANESE_INDEPENDENT[ch] ?? ch) +
+          (SUNDANESE_INDEPENDENT[next] ?? next);
         i += 2;
         continue;
       }
@@ -586,21 +596,18 @@ function convertWordToSundanese(word: string): string {
       const base = SUNDANESE_CONSONANTS[ch];
 
       // Consonant + falling diphthong: cai / kau / kei / koi
+      // Offglide is an independent vowel letter, not a second diacritic.
       if (SUNDANESE_VOWELS.has(next) && isFallingDiphthong(next, afterNext)) {
-        // Sundanese shaping expects left signs before above signs, and
-        // above signs before right signs. Only oi reverses phonetic order.
-        const signs = next === 'o' ? [afterNext, next] : [next, afterNext];
-        out += base + signs.map((vowel) => SUNDANESE_VOWEL_SIGN[vowel]).join('');
+        out +=
+          base +
+          (SUNDANESE_VOWEL_SIGN[next] ?? '') +
+          (SUNDANESE_INDEPENDENT[afterNext] ?? afterNext);
         i += 3;
         continue;
       }
 
-      // Consonant before rising glide: mark pamaéh, let glide handle next
-      if (
-        SUNDANESE_VOWELS.has(next) &&
-        (next === 'i' || next === 'u') &&
-        SUNDANESE_VOWELS.has(afterNext)
-      ) {
+      // Consonant before rising glide letter
+      if (next === 'ɩ' || next === 'w') {
         out += base + SUNDANESE_PAMAEH;
         i += 1;
         continue;
@@ -633,16 +640,9 @@ function convertWordToSundanese(word: string): string {
 
 /** krulermorna as used by sutysisku's Tibetan path (glides + falling diphthongs). */
 function krulermornaForTibetan(text: string): string {
-  return text
-    .replace(/\./g, '')
-    .replace(/(?<=[aeiouy])u([aeiouy])/g, 'w$1')
-    .replace(/(?<=[aeiouy])i([aeiouy])/g, 'ɩ$1')
-    .replace(/u([aeiouy])/g, 'w$1')
-    .replace(/i([aeiouy])/g, 'ɩ$1')
-    .replace(/au/g, 'ḁ')
-    .replace(/ai/g, 'ą')
-    .replace(/ei/g, 'ę')
-    .replace(/oi/g, 'ǫ');
+  return applyFallingDiphthongs(
+    applyRisingAndMedialGlides(text.replace(/\./g, ''))
+  );
 }
 
 /**
@@ -765,12 +765,84 @@ const BROLERMORNA_FINALS: Record<string, string> = {
   p: 'ף', k: 'ך', j: 'ץ', m: 'ם', n: 'ן', x: 'ק',
 };
 const BROLERMORNA_VOWELS: Record<string, string> = {
-  a: '\u05b7', e: '\u05b6', i: '\u05b4', o: '\u05b8', u: '\u05bb',
+  // o: U+05C7 qamats qatan (PDF also allows U+05B8)
+  a: '\u05b7', e: '\u05b6', i: '\u05b4', o: '\u05c7', u: '\u05bb',
 };
+
+type BrolerCell = { c: string; stressed: boolean };
+
+/**
+ * Same glide/diphthong rewrite as {@link krulermornaOfficial}, keeping a
+ * per-character stress lane. Word-initial iV/uV bind before medial u→w
+ * (iuuinai → ɩuwiną); after a consonant Ciua → Ciwa.
+ */
+function brolermornaKrulerCells(normalized: string): BrolerCell[] {
+  let cells: BrolerCell[] = [...normalized.toLowerCase()].map((c, i) => ({
+    c: c === 'h' ? "'" : c,
+    stressed: normalized[i] !== normalized[i].toLowerCase(),
+  }));
+
+  const beforeGlide = (c: string) =>
+    /[ptkflscmxbdgvrzjnaeiouy.']/.test(c);
+  const isVowel = (c: string) => 'aeiouy'.includes(c);
+
+  // Word-initial rising iV / uV first (Lojban: "iu…" is iu, not i+uu…).
+  if (cells.length >= 2 && isVowel(cells[1].c)) {
+    if (cells[0].c === 'u') cells[0] = { c: 'w', stressed: cells[0].stressed };
+    else if (cells[0].c === 'i')
+      cells[0] = { c: 'ɩ', stressed: cells[0].stressed };
+  }
+
+  const rewriteGlide = (from: 'u' | 'i', to: 'w' | 'ɩ') => {
+    const out: BrolerCell[] = [];
+    for (let i = 0; i < cells.length; i++) {
+      const prev = out.length ? out[out.length - 1] : undefined;
+      const cur = cells[i];
+      const next = cells[i + 1];
+      if (
+        prev &&
+        next &&
+        cur.c === from &&
+        beforeGlide(prev.c) &&
+        isVowel(next.c)
+      ) {
+        out.push({ c: to, stressed: cur.stressed });
+      } else {
+        out.push(cur);
+      }
+    }
+    cells = out;
+  };
+  rewriteGlide('u', 'w');
+  rewriteGlide('i', 'ɩ');
+
+  // Falling diphthongs au/ai/ei/oi
+  const falling: Record<string, string> = {
+    au: 'ḁ',
+    ai: 'ą',
+    ei: 'ę',
+    oi: 'ǫ',
+  };
+  const out: BrolerCell[] = [];
+  for (let i = 0; i < cells.length; i++) {
+    const pair = cells[i].c + (cells[i + 1]?.c ?? '');
+    const folded = falling[pair];
+    if (folded) {
+      out.push({
+        c: folded,
+        stressed: cells[i].stressed || cells[i + 1].stressed,
+      });
+      i += 1;
+    } else {
+      out.push(cells[i]);
+    }
+  }
+  return out;
+}
 
 /** Hebrew abugida; return logical Unicode order (never reverse RTL text). */
 export function latinToBrolermorna(input: string): string {
-  return input.replace(/[a-zA-Z'’]+/g, (word) => {
+  return input.replace(/[a-zA-Z'’]+/g, (word, offset) => {
     const normalized = word.replace(/’/g, "'").replace(/h/gi, "'");
     const lower = normalized.toLowerCase();
     // The proposal uses holam for brivla y, but sheva for cmavo/cmevla y.
@@ -778,39 +850,62 @@ export function latinToBrolermorna(input: string): string {
     if (lower.includes('y')) {
       const parsed = romoi_lahi_cmaxes(lower);
       const tokens = parsed['te spuda'];
-      isBrivla = parsed.tcini === 'snada' && Array.isArray(tokens) &&
-        tokens.length === 1 && ['gismu', 'lujvo', "fu'ivla", 'fuhivla']
-          .includes(tokens[0][0]);
+      isBrivla =
+        parsed.tcini === 'snada' &&
+        Array.isArray(tokens) &&
+        tokens.length === 1 &&
+        ['gismu', 'lujvo', "fu'ivla", 'fuhivla'].includes(tokens[0][0]);
     }
 
+    // Final forms are only for the last letter of a cmevla (before `.`).
+    // A comma is a syllable break, never a cmevla end — no final letter before it.
+    const after = input[offset + word.length] ?? '';
+    const allowFinal = after === '.';
+
+    const cells = brolermornaKrulerCells(normalized);
     let out = '';
     let base = '';
-    const flush = () => { out += base; base = ''; };
-    for (let i = 0; i < lower.length; i++) {
-      const ch = lower[i];
-      const next = lower[i + 1] ?? '';
-      if (BROLERMORNA_CONSONANTS[ch]) {
+    const flush = () => {
+      out += base;
+      base = '';
+    };
+    const vowelMark = (vowel: string, carrier: string): string => {
+      if (vowel === 'y') {
+        return isBrivla ? (carrier === 'ו' ? '\u05ba' : '\u05b9') : '\u05b0';
+      }
+      return BROLERMORNA_VOWELS[vowel] ?? '';
+    };
+    const attachVowel = (vowel: string, stressed: boolean) => {
+      if (!base) base = 'א';
+      base += vowelMark(vowel, base) + (stressed ? '\u05ab' : '');
+      flush();
+    };
+
+    for (let i = 0; i < cells.length; i++) {
+      const { c, stressed } = cells[i];
+      if (BROLERMORNA_CONSONANTS[c]) {
         flush();
-        base = (i === lower.length - 1 ? BROLERMORNA_FINALS[ch] : '') ||
-          BROLERMORNA_CONSONANTS[ch];
-      } else if ((ch === 'i' || ch === 'u') && /[aeiouy]/.test(next)) {
+        const isFinal = allowFinal && i === cells.length - 1;
+        base =
+          (isFinal ? BROLERMORNA_FINALS[c] : '') || BROLERMORNA_CONSONANTS[c];
+      } else if (c === 'ɩ' || c === 'w') {
+        // Rising glide from krulermorna (ia → ɩa, iua → iwa, …)
         flush();
-        base = ch === 'i' ? 'י' : 'ו';
-      } else if (/[aeiouy]/.test(ch)) {
+        base = c === 'ɩ' ? 'י' : 'ו';
+      } else if (c === 'ą' || c === 'ę' || c === 'ǫ' || c === 'ḁ') {
+        const nucleus =
+          c === 'ą' || c === 'ḁ' ? 'a' : c === 'ę' ? 'e' : 'o';
         if (!base) base = 'א';
-        const mark = ch === 'y'
-          ? (isBrivla ? (base === 'ו' ? '\u05ba' : '\u05b9') : '\u05b0')
-          : BROLERMORNA_VOWELS[ch];
-        const stressed = normalized[i] !== ch;
-        base += mark + (stressed ? '\u05ab' : '');
-        if (isFallingDiphthong(ch, next)) {
-          base += next === 'u' ? 'ו' : 'י';
-          i++;
-        }
+        base +=
+          vowelMark(nucleus, base) +
+          (stressed ? '\u05ab' : '') +
+          (c === 'ḁ' ? 'ו' : 'י');
         flush();
+      } else if ('aeiouy'.includes(c)) {
+        attachVowel(c, stressed);
       } else {
         flush();
-        out += normalized[i];
+        out += c;
       }
     }
     flush();

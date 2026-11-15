@@ -1,6 +1,7 @@
-import { FONTS, AppState } from './types';
+import { FONTS, UTF_COPY_FONTS, AppState } from './types';
 import { renderToCanvas } from './renderer';
 import { preloadFontsInBackground } from './font-loader';
+import { preprocess } from './lojban-utils';
 
 const STORAGE_KEY = 'melbi-zei-lojban-state';
 const URL_PARAM_TEXT = 'text';
@@ -9,6 +10,16 @@ const URL_PARAM_SIZE = 'size';
 const SIZE_MIN = 20;
 const SIZE_MAX = 200;
 const validFontValues = new Set(FONTS.map((f) => f.value));
+
+const SAMPLE_TEXTS: { label: string; text: string }[] = [
+  { label: 'Greeting', text: 'coi ro do ma nuzba' },
+  { label: 'Hungry cows', text: ".ii .o'i mu xagji sofybakni cu zvati le purdi" },
+  { label: 'Rising glides', text: 'iu ui nai' },
+  { label: 'Glides jammed', text: 'iuuinai' },
+  { label: 'Cmevla + commas', text: "kuln,r,kore'a" },
+  { label: 'Diphthongs', text: 'coi pei doi .ui' },
+  { label: 'Brivla with y', text: "sofybakni simyzu'e" },
+];
 
 function getStateFromURL(): Partial<Pick<AppState, 'text' | 'family' | 'size'>> {
   const params = new URLSearchParams(window.location.search);
@@ -91,7 +102,9 @@ const state: AppState = {
 
 export function initApp(): void {
   const textInput = document.getElementById('text-input') as HTMLInputElement;
-  const sampleTextBtn = document.getElementById('sample-text-btn');
+  const clearTextBtn = document.getElementById('clear-text-btn') as HTMLButtonElement | null;
+  const sampleMenuBtn = document.getElementById('sample-menu-btn') as HTMLButtonElement | null;
+  const sampleMenu = document.getElementById('sample-menu');
   const fontSelect = document.getElementById('font-select') as HTMLSelectElement;
   const sizeSlider = document.getElementById('size-slider') as HTMLInputElement;
   const sizeValueDisplay = document.getElementById('size-value');
@@ -146,21 +159,69 @@ export function initApp(): void {
   }
 
   // Event Listeners
+  function syncClearButton(): void {
+    const hasText = textInput.value.length > 0;
+    if (!clearTextBtn) return;
+    clearTextBtn.classList.toggle('hidden', !hasText);
+    clearTextBtn.classList.toggle('inline-flex', hasText);
+  }
+
+  function setText(next: string): void {
+    state.text = next;
+    textInput.value = next;
+    syncClearButton();
+    triggerRender();
+    schedulePersist();
+  }
+
+  function closeSampleMenu(): void {
+    sampleMenu?.classList.add('hidden');
+    sampleMenuBtn?.setAttribute('aria-expanded', 'false');
+  }
+
+  if (sampleMenu) {
+    sampleMenu.innerHTML = SAMPLE_TEXTS.map(
+      ({ label, text }) =>
+        `<button type="button" role="menuitem" data-sample=${JSON.stringify(text)} class="block w-full px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-700">
+          <span class="block font-medium text-slate-800 dark:text-slate-100">${label}</span>
+          <span class="mt-0.5 block truncate font-mono text-xs text-slate-500 dark:text-slate-400">${text.replace(/</g, '&lt;')}</span>
+        </button>`
+    ).join('');
+  }
+
   textInput.addEventListener('input', (e) => {
     state.text = (e.target as HTMLInputElement).value;
+    syncClearButton();
     triggerRender();
     schedulePersist();
   });
 
-  sampleTextBtn?.addEventListener('click', () => {
-    state.text = 'coi ro do ma nuzba';
-    textInput.value = state.text;
-    triggerRender();
-    schedulePersist();
+  clearTextBtn?.addEventListener('click', () => setText(''));
+
+  sampleMenuBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = sampleMenu?.classList.contains('hidden');
+    if (open) {
+      sampleMenu?.classList.remove('hidden');
+      sampleMenuBtn.setAttribute('aria-expanded', 'true');
+    } else {
+      closeSampleMenu();
+    }
   });
+
+  sampleMenu?.querySelectorAll<HTMLButtonElement>('[data-sample]').forEach((item) => {
+    item.addEventListener('click', () => {
+      const text = item.dataset.sample ?? '';
+      closeSampleMenu();
+      setText(text);
+    });
+  });
+
+  syncClearButton();
 
   fontSelect.addEventListener('change', (e) => {
     state.family = (e.target as HTMLSelectElement).value;
+    syncCopyControls();
     triggerRender();
     persistImmediate();
   });
@@ -173,6 +234,31 @@ export function initApp(): void {
     persistImmediate();
   });
 
+  const copyImageBtn = document.getElementById('copy-image-btn') as HTMLButtonElement | null;
+  const copyMenuBtn = document.getElementById('copy-menu-btn') as HTMLButtonElement | null;
+  const copyMenu = document.getElementById('copy-menu');
+  const copyImageLabel = document.getElementById('copy-image-label');
+  const copyMenuLabel = document.getElementById('copy-menu-label');
+
+  function supportsTextCopy(family: string): boolean {
+    return UTF_COPY_FONTS.has(family);
+  }
+
+  function syncCopyControls(): void {
+    const utf = supportsTextCopy(state.family);
+    // Don't leave both `hidden` and `inline-flex` on the same node — in
+    // Tailwind they fight over `display` and `inline-flex` often wins.
+    for (const [btn, show] of [
+      [copyImageBtn, !utf],
+      [copyMenuBtn, utf],
+    ] as const) {
+      if (!btn) continue;
+      btn.classList.toggle('hidden', !show);
+      btn.classList.toggle('inline-flex', show);
+    }
+    closeCopyMenu();
+  }
+
   // Back/forward: restore state from URL and re-render
   window.addEventListener('popstate', () => {
     const urlState = getStateFromURL();
@@ -184,6 +270,7 @@ export function initApp(): void {
     sizeSlider.value = state.size.toString();
     if (sizeValueDisplay) sizeValueDisplay.textContent = `${state.size}px`;
     saveStateToStorage(state);
+    syncCopyControls();
     triggerRender();
   });
 
@@ -192,6 +279,88 @@ export function initApp(): void {
     applyTheme(state.theme);
     localStorage.setItem('theme', state.theme);
   });
+
+  function closeCopyMenu(): void {
+    copyMenu?.classList.add('hidden');
+    copyMenuBtn?.setAttribute('aria-expanded', 'false');
+  }
+
+  function openCopyMenu(): void {
+    copyMenu?.classList.remove('hidden');
+    copyMenuBtn?.setAttribute('aria-expanded', 'true');
+  }
+
+  async function copyAsImage(): Promise<void> {
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob((b) => resolve(b), 'image/png')
+    );
+    if (!blob) throw new Error('Could not export canvas');
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+  }
+
+  async function copyAsText(): Promise<void> {
+    const converted = preprocess({
+      text: (state.text || '').trim(),
+      font: state.family,
+    });
+    await navigator.clipboard.writeText(converted);
+  }
+
+  function flashCopyLabel(ok: boolean): void {
+    const utf = supportsTextCopy(state.family);
+    const label = utf ? copyMenuLabel : copyImageLabel;
+    if (!label) return;
+    const idle = utf ? 'Copy' : 'Copy as image';
+    label.textContent = ok ? 'Copied!' : 'Copy failed';
+    window.setTimeout(() => {
+      label.textContent = idle;
+    }, 1500);
+  }
+
+  copyImageBtn?.addEventListener('click', async () => {
+    try {
+      await copyAsImage();
+      flashCopyLabel(true);
+    } catch {
+      flashCopyLabel(false);
+    }
+  });
+
+  copyMenuBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (copyMenu?.classList.contains('hidden')) openCopyMenu();
+    else closeCopyMenu();
+  });
+
+  copyMenu?.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((item) => {
+    item.addEventListener('click', async () => {
+      const mode = item.dataset.copy;
+      closeCopyMenu();
+      try {
+        if (mode === 'text') await copyAsText();
+        else await copyAsImage();
+        flashCopyLabel(true);
+      } catch {
+        flashCopyLabel(false);
+      }
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as Node;
+    const copyWrap = document.getElementById('copy-controls');
+    const sampleWrap = document.getElementById('sample-controls');
+    if (copyWrap && !copyWrap.contains(target)) closeCopyMenu();
+    if (sampleWrap && !sampleWrap.contains(target)) closeSampleMenu();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeCopyMenu();
+      closeSampleMenu();
+    }
+  });
+
+  syncCopyControls();
 
   // Re-wrap after a viewport resize or phone rotation, including when the
   // preview was previously rendered at a much narrower width.
