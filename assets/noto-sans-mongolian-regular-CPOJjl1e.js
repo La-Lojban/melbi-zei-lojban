@@ -1,0 +1,1 @@
+var e=`/melbi-zei-lojban/assets/noto-sans-mongolian-regular-YgaU5Ezj.ttf`;export{e as default};
