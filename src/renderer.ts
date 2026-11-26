@@ -37,7 +37,7 @@ export async function renderToCanvas(
   if (renderVersions.get(canvas) !== version) return;
 
   const fontDef = fonts.find((f) => f.value === family) || fonts[0];
-  canvasTxt.lineHeight = (fontDef.line || 1.2) * size;
+  canvasTxt.lineHeight = Math.max(fontDef.line || 1.2, 1.35) * size;
   canvasTxt.fontSize = size;
   canvasTxt.font = family;
   canvasTxt.vAlign = 'top';
@@ -50,7 +50,7 @@ export async function renderToCanvas(
     ? parseFloat(containerStyle.paddingLeft) + parseFloat(containerStyle.paddingRight)
     : 32;
   const width = Math.max((container?.clientWidth ?? 300) - horizontalPadding, 1);
-  const padding = Math.round(size * 0.3);
+  const padding = Math.max(16, Math.round(size * 0.5));
   const processedText = preprocess({ text: text || '', font: family });
 
   if (family === 'mongolian') {
@@ -80,7 +80,7 @@ export async function renderToCanvas(
   ctx.direction = family === 'brolermorna' ? 'rtl' : 'ltr';
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = 'black';
+  applyInkStyle(ctx, size);
   canvasTxt.drawText(ctx, processedText, padding, padding, Math.max(1, width - 2 * padding), height);
 
   image.src = canvas.toDataURL('image/webp', 1.0);
@@ -130,7 +130,7 @@ function renderMongolian(
   ctx.scale(ratio, ratio);
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, actualWidth, height);
-  ctx.fillStyle = 'black';
+  applyInkStyle(ctx, size);
   ctx.font = `${size}px "mongolian"`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
@@ -142,4 +142,14 @@ function renderMongolian(
     ctx.fillText(line, 0, 0);
     ctx.restore();
   });
+}
+
+// A soft, close shadow adds depth without obscuring small marks or changing
+// the script's shapes. Set this after resizing the canvas, which resets state.
+function applyInkStyle(ctx: CanvasRenderingContext2D, size: number): void {
+  ctx.fillStyle = '#20262b';
+  ctx.shadowColor = 'rgba(28, 35, 40, 0.18)';
+  ctx.shadowBlur = Math.max(1, size * 0.035);
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = Math.max(0.5, size * 0.025);
 }
