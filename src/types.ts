@@ -26,6 +26,7 @@ export const FONTS: FontDef[] = [
   { name: 'Drakono', value: 'drakono', line: 1.2 },
   { name: 'Piper Karot', value: 'piper-karot', line: 1.2 },
   { name: 'Tisna', value: 'tisna-bold', line: 1.2 },
+  { name: 'Mongolian (vertical)', value: 'mongolian', line: 1.5 },
   { name: 'MV Randhoo (Thaana)', value: 'mv-randhoo', line: 1.5 },
   { name: "su'unda (Sundanese)", value: 'sundanese', line: 1.5 },
   { name: 'utco (Tibetan)', value: 'tibetan', line: 1.6 },
@@ -38,6 +39,7 @@ export const FONTS: FontDef[] = [
 /** Orthographies whose converted output is real Unicode (copyable as text). */
 export const UTF_COPY_FONTS = new Set([
   'emoji',
+  'mongolian',
   'mv-randhoo',
   'sundanese',
   'tibetan',

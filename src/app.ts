@@ -300,7 +300,7 @@ export function initApp(): void {
 
   async function copyAsText(): Promise<void> {
     const converted = preprocess({
-      text: (state.text || '').trim(),
+      text: state.text || '',
       font: state.family,
     });
     await navigator.clipboard.writeText(converted);

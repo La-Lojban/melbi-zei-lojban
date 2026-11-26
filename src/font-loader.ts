@@ -32,6 +32,7 @@ const FACE_FILES: Record<string, FaceSpec[]> = {
   drakono: [{ family: 'drakono', file: () => import('./fonts/unicode-drakono.otf?url') }],
   'piper-karot': [{ family: 'piper-karot', file: () => import('./fonts/piper-karot.otf?url') }],
   'tisna-bold': [{ family: 'tisna-bold', weight: 'bold', file: () => import('./fonts/tisna-bold.otf?url') }],
+  mongolian: [{ family: 'mongolian', file: () => import('./fonts/noto-sans-mongolian-regular.ttf?url') }],
   'mv-randhoo': [{ family: 'mv-randhoo', file: () => import('./fonts/mv-randhoo-regular.ttf?url') }],
   sundanese: [
     {

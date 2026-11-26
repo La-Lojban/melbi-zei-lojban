@@ -42,3 +42,14 @@ The production build will be available in the `dist/` directory, which is automa
 - `index.html`: Main entry point.
 - `tailwind.config.js`: Styling configuration.
 - `vite.config.ts`: Build and server configuration.
+## Mongolian transcription
+
+The Mongolian option uses traditional Mongolian Unicode letters in vertical,
+top-to-bottom columns, ordered left to right. Its phonemic letter assignments
+are a project-specific convention: the chart linked from the historical
+[Lojban proposal](https://mw.lojban.org/papri/Mongolian) is unavailable. The
+conversion preserves original spelling exactly, including explicit stress,
+pauses, whitespace, and literal Mongolian text. Copied text uses `~U` before
+an uppercase letter, `~L` before a literal Mongolian letter, and `~~` for a
+literal tilde; `mongolianToLatin` decodes these escapes. The bundled Noto Sans
+Mongolian font is distributed under the accompanying SIL Open Font License.

@@ -913,6 +913,44 @@ export function latinToBrolermorna(input: string): string {
   });
 }
 
+// A reversible phonemic Mongolian alphabet. The historical proposal's chart is
+// no longer available, so these assignments are an explicit local convention.
+// ~U marks uppercase, ~L quotes a literal mapped Mongolian letter, and ~~ a
+// literal tilde. This preserves stress, punctuation, and arbitrary input.
+const MONGOLIAN_MAP: Record<string, string> = {
+  a: 'ᠠ', e: 'ᠡ', i: 'ᠢ', o: 'ᠣ', u: 'ᠤ', y: 'ᠥ',
+  b: 'ᠪ', c: 'ᠱ', d: 'ᠳ', f: 'ᠹ', g: 'ᠭ', j: 'ᠵ',
+  k: 'ᠺ', l: 'ᠯ', m: 'ᠮ', n: 'ᠨ', p: 'ᠫ', r: 'ᠷ',
+  s: 'ᠰ', t: 'ᠲ', v: 'ᠸ', x: 'ᠬ', z: 'ᠽ', "'": 'ᠾ',
+};
+const MONGOLIAN_REVERSE = new Map(Object.entries(MONGOLIAN_MAP).map(([a, b]) => [b, a]));
+
+export function latinToMongolian(input: string): string {
+  return Array.from(input, (ch) => {
+    if (ch === '~') return '~~';
+    if (MONGOLIAN_REVERSE.has(ch)) return '~L' + ch;
+    if (MONGOLIAN_MAP[ch]) return MONGOLIAN_MAP[ch];
+    const lower = ch.toLowerCase();
+    if (ch !== lower && ch.length === 1 && /^[A-Z]$/.test(ch) && MONGOLIAN_MAP[lower])
+      return '~U' + MONGOLIAN_MAP[lower];
+    return ch;
+  }).join('');
+}
+
+export function mongolianToLatin(input: string): string {
+  const chars = Array.from(input);
+  let out = '';
+  for (let i = 0; i < chars.length; i++) {
+    if (chars[i] === '~' && chars[i + 1] === '~') { out += '~'; i++; }
+    else if (chars[i] === '~' && chars[i + 1] === 'L' && MONGOLIAN_REVERSE.has(chars[i + 2])) {
+      out += chars[i + 2]; i += 2;
+    } else if (chars[i] === '~' && chars[i + 1] === 'U' && MONGOLIAN_REVERSE.has(chars[i + 2])) {
+      out += MONGOLIAN_REVERSE.get(chars[i + 2])!.toUpperCase(); i += 2;
+    } else out += MONGOLIAN_REVERSE.get(chars[i]) ?? chars[i];
+  }
+  return out;
+}
+
 export function preprocess({ text, font }: { text: string; font: string }): string {
   const zbalermornaFonts = [
     'crisa',
@@ -941,6 +979,8 @@ export function preprocess({ text, font }: { text: string; font: string }): stri
     // The original code was returning string | string[] but joined by ' '.
     // We'll return string.
     return zbalermornaize({ w: '', ot, rfs });
+  } else if (font === 'mongolian') {
+    return latinToMongolian(text);
   } else if (font === 'mv-randhoo') {
     return latinToThaana(text);
   } else if (font === 'sundanese') {

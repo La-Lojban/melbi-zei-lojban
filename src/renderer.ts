@@ -51,7 +51,17 @@ export async function renderToCanvas(
     : 32;
   const width = Math.max((container?.clientWidth ?? 300) - horizontalPadding, 1);
   const padding = Math.round(size * 0.3);
-  const processedText = preprocess({ text: (text || '').trim(), font: family });
+  const processedText = preprocess({ text: text || '', font: family });
+
+  if (family === 'mongolian') {
+    renderMongolian(ctx, canvas, processedText, width, size, padding, ratio);
+    image.src = canvas.toDataURL('image/webp', 1.0);
+    image.style.width = canvas.style.width;
+    image.style.height = 'auto';
+    skeleton?.classList.add('hidden');
+    image.classList.remove('hidden');
+    return;
+  }
 
   // Measure and wrap in CSS pixels. Only the backing bitmap uses device pixels;
   // mixing the two made high-DPI previews much taller than the visible text.
@@ -59,7 +69,7 @@ export async function renderToCanvas(
   canvas.height = 1;
   ctx.direction = family === 'brolermorna' ? 'rtl' : 'ltr';
   const { height: contentHeight } = canvasTxt.drawText(
-    ctx, processedText, 0, padding, width, 1
+    ctx, processedText, padding, padding, Math.max(1, width - 2 * padding), 1
   );
   const height = Math.max(Math.ceil(contentHeight + padding * 2), 40);
 
@@ -71,7 +81,7 @@ export async function renderToCanvas(
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = 'black';
-  canvasTxt.drawText(ctx, processedText, 0, padding, width, height);
+  canvasTxt.drawText(ctx, processedText, padding, padding, Math.max(1, width - 2 * padding), height);
 
   image.src = canvas.toDataURL('image/webp', 1.0);
   image.style.width = `${width}px`;
@@ -79,4 +89,57 @@ export async function renderToCanvas(
 
   skeleton?.classList.add('hidden');
   image.classList.remove('hidden');
+}
+
+// Mongolian fonts shape in logical text order. Rotate each complete line so
+// shaping remains intact, and place columns from left to right.
+function renderMongolian(
+  ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, text: string,
+  width: number, size: number, padding: number, ratio: number
+): void {
+  ctx.font = `${size}px "mongolian"`;
+  const limit = Math.max(size * 2, 600 - 2 * padding);
+  const columns: string[] = [];
+  for (const paragraph of text.split('\n')) {
+    let line = '';
+    for (const part of paragraph.match(/\S+\s*|\s+/gu) ?? []) {
+      if (line && ctx.measureText(line + part).width > limit) {
+        columns.push(line);
+        line = '';
+      }
+      // Break unusually long words only when necessary.
+      for (const ch of Array.from(part)) {
+        if (line && ctx.measureText(line + ch).width > limit) {
+          columns.push(line);
+          line = '';
+        }
+        line += ch;
+      }
+    }
+    columns.push(line);
+  }
+  const lineStep = size * 1.5;
+  const contentWidth = columns.length * lineStep;
+  const actualWidth = Math.max(width, Math.ceil(contentWidth + 2 * padding));
+  const contentHeight = Math.max(0, ...columns.map((line) => ctx.measureText(line).width));
+  const height = Math.max(40, Math.ceil(contentHeight + 2 * padding));
+  canvas.width = Math.ceil(actualWidth * ratio);
+  canvas.height = Math.ceil(height * ratio);
+  canvas.style.width = `${actualWidth}px`;
+  canvas.style.height = `${height}px`;
+  ctx.scale(ratio, ratio);
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, actualWidth, height);
+  ctx.fillStyle = 'black';
+  ctx.font = `${size}px "mongolian"`;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  const start = (actualWidth - contentWidth) / 2 + lineStep / 2;
+  columns.forEach((line, i) => {
+    ctx.save();
+    ctx.translate(start + i * lineStep, padding);
+    ctx.rotate(Math.PI / 2);
+    ctx.fillText(line, 0, 0);
+    ctx.restore();
+  });
 }
