@@ -2,57 +2,106 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { latinToSundanese, preprocess } from '../src/lojban-utils.ts';
 
-test('independent e/y and x letter follow the corrected mapping', () => {
-  assert.equal(latinToSundanese('.e'), '\u1b86');
-  assert.equal(latinToSundanese('.y'), '\u1b88');
-  assert.equal(latinToSundanese('xa'), '\u1b8b');
-  assert.equal(latinToSundanese('xu'), '\u1b8b\u1ba5');
+/**
+ * Chart: su'unda selyle'u co lojbo
+ * Tables: zunsna / salsna / karsna / minle'u karsna (+ footnote examples).
+ */
+
+test('chart zunsna: consonants with inherent a', () => {
+  const pairs: [string, string][] = [
+    ['ka', 'ᮊ'],
+    ['ga', 'ᮌ'],
+    ['ca', 'ᮎ'],
+    ['ja', 'ᮏ'],
+    ['ta', 'ᮒ'],
+    ['da', 'ᮓ'],
+    ['na', 'ᮔ'],
+    ['pa', 'ᮕ'],
+    ['ba', 'ᮘ'],
+    ['ma', 'ᮙ'],
+    ['ra', 'ᮛ'],
+    ['la', 'ᮜ'],
+    ['sa', 'ᮞ'],
+    ['fa', 'ᮖ'],
+    ['xa', 'ᮋ'],
+    ['va', 'ᮗ'],
+    ['za', 'ᮐ'],
+    ["'a", 'ᮠ'],
+  ];
+  for (const [latin, expected] of pairs) {
+    assert.equal(latinToSundanese(latin), expected, latin);
+  }
 });
 
-test('falling diphthong offglides use independent i/u letters', () => {
-  assert.equal(latinToSundanese('coi'), '\u1b8e\u1ba7\u1b84');
-  assert.equal(latinToSundanese('loi'), '\u1b9c\u1ba7\u1b84');
-  assert.equal(latinToSundanese('pei'), '\u1b95\u1ba6\u1b84');
-  assert.equal(latinToSundanese('mai'), '\u1b99\u1b84');
-  assert.equal(latinToSundanese('mau'), '\u1b99\u1b85');
-  assert.equal(latinToSundanese('.au'), '\u1b83\u1b85');
-  assert.equal(latinToSundanese('.ai'), '\u1b83\u1b84');
-  assert.equal(latinToSundanese('.ei'), '\u1b86\u1b84');
-  assert.equal(latinToSundanese('.oi'), '\u1b87\u1b84');
+test('chart salsna: rising glides ia / ua', () => {
+  assert.equal(latinToSundanese('ia'), 'ᮚ');
+  assert.equal(latinToSundanese('ua'), 'ᮝ');
+});
+
+test('chart karsna: independent vowels after pause', () => {
+  assert.equal(latinToSundanese('.a'), 'ᮃ');
+  assert.equal(latinToSundanese('.y'), 'ᮈ');
+  assert.equal(latinToSundanese('.i'), 'ᮄ');
+  assert.equal(latinToSundanese('.e'), 'ᮆ');
+  assert.equal(latinToSundanese('.u'), 'ᮅ');
+  assert.equal(latinToSundanese('.o'), 'ᮇ');
+});
+
+test("chart minle'u karsna: vowel signs on ka", () => {
+  assert.equal(latinToSundanese('ka'), 'ᮊ');
+  assert.equal(latinToSundanese('ky'), 'ᮊᮨ');
+  assert.equal(latinToSundanese('ki'), 'ᮊᮤ');
+  assert.equal(latinToSundanese('ke'), 'ᮊᮦ');
+  assert.equal(latinToSundanese('ku'), 'ᮊᮥ');
+  assert.equal(latinToSundanese('ko'), 'ᮊᮧ');
+});
+
+test('chart footnotes: pamaeh, .au, loi', () => {
+  // bare consonant uses pamaeh (᮪)
+  assert.equal(latinToSundanese('d'), 'ᮓ᮪');
+  // falling diphthong offglide = independent vowel letter
+  assert.equal(latinToSundanese('.au'), 'ᮃᮅ');
+  assert.equal(latinToSundanese('loi'), 'ᮜᮧᮄ');
+});
+
+test('chart-related falling diphthongs', () => {
+  assert.equal(latinToSundanese('coi'), 'ᮎᮧᮄ');
+  assert.equal(latinToSundanese('pei'), 'ᮕᮦᮄ');
+  assert.equal(latinToSundanese('mai'), 'ᮙᮄ');
+  assert.equal(latinToSundanese('mau'), 'ᮙᮅ');
+  assert.equal(latinToSundanese('.ai'), 'ᮃᮄ');
+  assert.equal(latinToSundanese('.ei'), 'ᮆᮄ');
+  assert.equal(latinToSundanese('.oi'), 'ᮇᮄ');
 });
 
 test('krulermorna glides: word-initial iu/ui first; Ciua → Ciwa', () => {
-  assert.equal(latinToSundanese('ia'), '\u1b9a');
-  assert.equal(latinToSundanese('ua'), '\u1b9d');
-  assert.equal(latinToSundanese('iu'), '\u1b9a\u1ba5');
-  assert.equal(latinToSundanese('ui'), '\u1b9d\u1ba4');
-  // Word-initial iua → ɩua (iu + a), not iwa
-  assert.equal(latinToSundanese('iua'), '\u1b9a\u1ba5\u1b83');
-  assert.equal(latinToSundanese('biua'), '\u1b98\u1ba4\u1b9d');
-  assert.equal(latinToSundanese('kiua'), '\u1b8a\u1ba4\u1b9d');
-  // Word-initial uia → wia (ui + a)
-  assert.equal(latinToSundanese('uia'), '\u1b9d\u1ba4\u1b83');
-  assert.equal(latinToSundanese('cia'), '\u1b8e\u1baa\u1b9a');
+  assert.equal(latinToSundanese('iu'), 'ᮚᮥ');
+  assert.equal(latinToSundanese('ui'), 'ᮝᮤ');
+  assert.equal(latinToSundanese('iua'), 'ᮚᮥᮃ');
+  assert.equal(latinToSundanese('biua'), 'ᮘᮤᮝ');
+  assert.equal(latinToSundanese('kiua'), 'ᮊᮤᮝ');
+  assert.equal(latinToSundanese('uia'), 'ᮝᮤᮃ');
+  assert.equal(latinToSundanese('cia'), 'ᮎ᮪ᮚ');
   assert.equal(
     latinToSundanese('iuuinai'),
     latinToSundanese('iu ui nai').replace(/ /g, '')
   );
 });
 
-test('the reported greeting converts through the Sundanese renderer path', () => {
+test('greeting converts through the Sundanese renderer path', () => {
   const input = 'coi ro do ma nuzba i xu do nelci la lojban';
   const expected = [
-    '\u1b8e\u1ba7\u1b84',
-    '\u1b9b\u1ba7',
-    '\u1b93\u1ba7',
-    '\u1b99',
-    '\u1b94\u1ba5\u1b90\u1baa\u1b98',
-    '\u1b84',
-    '\u1b8b\u1ba5',
-    '\u1b93\u1ba7',
-    '\u1b94\u1ba6\u1b9c\u1baa\u1b8e\u1ba4',
-    '\u1b9c',
-    '\u1b9c\u1ba7\u1b8f\u1baa\u1b98\u1b94\u1baa',
+    'ᮎᮧᮄ',
+    'ᮛᮧ',
+    'ᮓᮧ',
+    'ᮙ',
+    'ᮔᮥᮐ᮪ᮘ',
+    'ᮄ',
+    'ᮋᮥ',
+    'ᮓᮧ',
+    'ᮔᮦᮜ᮪ᮎᮤ',
+    'ᮜ',
+    'ᮜᮧᮏ᮪ᮘᮔ᮪',
   ].join(' ');
   assert.equal(latinToSundanese(input), expected);
   assert.equal(preprocess({ text: input, font: 'sundanese' }), expected);
