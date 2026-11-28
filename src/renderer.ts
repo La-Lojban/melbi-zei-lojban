@@ -1,3 +1,4 @@
+import { fitText } from './auto-layout';
 import canvasTxt from './canvas-txt';
 import { preprocess } from './lojban-utils';
 import { FontDef } from './types';
@@ -5,7 +6,7 @@ import { loadFont } from './font-loader';
 
 interface RenderOptions {
   text: string;
-  size: number;
+  size: number | null;
   family: string;
   fonts: FontDef[];
 }
@@ -37,12 +38,6 @@ export async function renderToCanvas(
   if (renderVersions.get(canvas) !== version) return;
 
   const fontDef = fonts.find((f) => f.value === family) || fonts[0];
-  canvasTxt.lineHeight = Math.max(fontDef.line || 1.2, 1.35) * size;
-  canvasTxt.fontSize = size;
-  canvasTxt.font = family;
-  canvasTxt.vAlign = 'top';
-  canvasTxt.align = 'center';
-
   const ratio = window.devicePixelRatio || 1;
   const container = document.getElementById('render-container');
   const containerStyle = container ? getComputedStyle(container) : null;
@@ -50,26 +45,73 @@ export async function renderToCanvas(
     ? parseFloat(containerStyle.paddingLeft) + parseFloat(containerStyle.paddingRight)
     : 32;
   const width = Math.max((container?.clientWidth ?? 300) - horizontalPadding, 1);
-  const padding = Math.max(16, Math.round(size * 0.5));
   const processedText = preprocess({ text: text || '', font: family });
+  const direction = family === 'brolermorna' ? 'rtl' : 'ltr';
+  const leading = Math.max(fontDef.line || 1.2, 1.35);
 
-  if (family === 'mongolian') {
-    renderMongolian(ctx, canvas, processedText, width, size, padding, ratio);
-    image.src = canvas.toDataURL('image/webp', 1.0);
-    image.style.width = canvas.style.width;
-    image.style.height = 'auto';
-    skeleton?.classList.add('hidden');
-    image.classList.remove('hidden');
-    return;
+  if (size === null) {
+    const vertical = family === 'mongolian';
+    ctx.direction = direction;
+    const layout = fitText(ctx, processedText, family, leading, width, vertical);
+    canvas.width = Math.ceil(layout.width * ratio);
+    canvas.height = Math.ceil(layout.height * ratio);
+    canvas.style.width = `${layout.width}px`;
+    canvas.style.height = `${layout.height}px`;
+    ctx.scale(ratio, ratio);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, layout.width, layout.height);
+    applyInkStyle(ctx, layout.size);
+    ctx.font = layout.font;
+    ctx.direction = direction;
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = vertical ? 'left' : 'center';
+    for (const line of layout.lines) {
+      if (vertical) {
+        ctx.save();
+        ctx.translate(line.x, line.y);
+        ctx.rotate(Math.PI / 2);
+        ctx.fillText(line.text, 0, 0);
+        ctx.restore();
+      } else {
+        ctx.fillText(line.text, line.x, line.y);
+      }
+    }
+  } else if (family === 'mongolian') {
+    renderMongolian(ctx, canvas, processedText, width, size, paddingFor(size), ratio);
+  } else {
+    renderHorizontal(ctx, canvas, processedText, width, size, family, leading, direction, ratio);
   }
+
+  image.src = canvas.toDataURL('image/webp', 1.0);
+  image.style.width = canvas.style.width;
+  image.style.height = 'auto';
+  skeleton?.classList.add('hidden');
+  image.classList.remove('hidden');
+}
+
+function paddingFor(size: number): number {
+  return Math.max(16, Math.round(size * 0.5));
+}
+
+function renderHorizontal(
+  ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, text: string,
+  width: number, size: number, family: string, leading: number,
+  direction: CanvasDirection, ratio: number,
+): void {
+  const padding = paddingFor(size);
+  canvasTxt.lineHeight = leading * size;
+  canvasTxt.fontSize = size;
+  canvasTxt.font = family;
+  canvasTxt.vAlign = 'top';
+  canvasTxt.align = 'center';
 
   // Measure and wrap in CSS pixels. Only the backing bitmap uses device pixels;
   // mixing the two made high-DPI previews much taller than the visible text.
   canvas.width = Math.ceil(width * ratio);
   canvas.height = 1;
-  ctx.direction = family === 'brolermorna' ? 'rtl' : 'ltr';
+  ctx.direction = direction;
   const { height: contentHeight } = canvasTxt.drawText(
-    ctx, processedText, padding, padding, Math.max(1, width - 2 * padding), 1
+    ctx, text, padding, padding, Math.max(1, width - 2 * padding), 1
   );
   const height = Math.max(Math.ceil(contentHeight + padding * 2), 40);
 
@@ -77,18 +119,11 @@ export async function renderToCanvas(
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
   ctx.scale(ratio, ratio);
-  ctx.direction = family === 'brolermorna' ? 'rtl' : 'ltr';
+  ctx.direction = direction;
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, width, height);
   applyInkStyle(ctx, size);
-  canvasTxt.drawText(ctx, processedText, padding, padding, Math.max(1, width - 2 * padding), height);
-
-  image.src = canvas.toDataURL('image/webp', 1.0);
-  image.style.width = `${width}px`;
-  image.style.height = 'auto';
-
-  skeleton?.classList.add('hidden');
-  image.classList.remove('hidden');
+  canvasTxt.drawText(ctx, text, padding, padding, Math.max(1, width - 2 * padding), height);
 }
 
 // Mongolian fonts shape in logical text order. Rotate each complete line so

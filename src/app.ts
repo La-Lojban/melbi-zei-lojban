@@ -36,33 +36,31 @@ function getStateFromURL(): Partial<Pick<AppState, 'text' | 'family' | 'size'>> 
   if (font != null && validFontValues.has(font)) out.family = font;
   const sizeParam = params.get(URL_PARAM_SIZE);
   if (sizeParam != null) {
-    const n = parseInt(sizeParam, 10);
-    if (!Number.isNaN(n) && n >= SIZE_MIN && n <= SIZE_MAX) out.size = n;
+    const n = Number(sizeParam);
+    if (Number.isInteger(n) && n >= SIZE_MIN && n <= SIZE_MAX) out.size = n;
   }
   return out;
 }
 
-function getStateFromStorage(): Partial<Pick<AppState, 'text' | 'family' | 'size'>> {
+function getStateFromStorage(): Partial<Pick<AppState, 'text' | 'family'>> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const out: Partial<Pick<AppState, 'text' | 'family' | 'size'>> = {};
+    const out: Partial<Pick<AppState, 'text' | 'family'>> = {};
     if (typeof parsed.text === 'string') out.text = parsed.text;
     if (typeof parsed.family === 'string' && validFontValues.has(parsed.family)) out.family = parsed.family;
-    if (typeof parsed.size === 'number' && parsed.size >= SIZE_MIN && parsed.size <= SIZE_MAX) out.size = parsed.size;
     return out;
   } catch {
     return {};
   }
 }
 
-function saveStateToStorage(state: Pick<AppState, 'text' | 'family' | 'size'>): void {
+function saveStateToStorage(state: Pick<AppState, 'text' | 'family'>): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       text: state.text,
       family: state.family,
-      size: state.size,
     }));
   } catch {
     // ignore quota or disabled storage
@@ -74,7 +72,8 @@ function pushStateToURL(state: Pick<AppState, 'text' | 'family' | 'size'>): void
   if (state.text) params.set(URL_PARAM_TEXT, state.text);
   else params.delete(URL_PARAM_TEXT);
   params.set(URL_PARAM_FONT, state.family);
-  params.set(URL_PARAM_SIZE, String(state.size));
+  if (state.size === null) params.delete(URL_PARAM_SIZE);
+  else params.set(URL_PARAM_SIZE, String(state.size));
   const query = params.toString();
   const url = query ? `${window.location.pathname}?${query}` : window.location.pathname;
   window.history.replaceState({ melbiZei: true }, '', url);
@@ -82,19 +81,19 @@ function pushStateToURL(state: Pick<AppState, 'text' | 'family' | 'size'>): void
 
 function mergeInitialState(
   url: Partial<Pick<AppState, 'text' | 'family' | 'size'>>,
-  storage: Partial<Pick<AppState, 'text' | 'family' | 'size'>>,
+  storage: Partial<Pick<AppState, 'text' | 'family'>>,
   defaults: Pick<AppState, 'text' | 'family' | 'size'>
 ): Pick<AppState, 'text' | 'family' | 'size'> {
   return {
     text: url.text ?? storage.text ?? defaults.text,
     family: url.family ?? storage.family ?? defaults.family,
-    size: url.size ?? storage.size ?? defaults.size,
+    size: url.size ?? defaults.size,
   };
 }
 
 const state: AppState = {
   text: '',
-  size: 50,
+  size: null,
   family: 'emoji',
   theme: (localStorage.getItem('theme') as 'light' | 'dark') ||
     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
@@ -107,6 +106,7 @@ export function initApp(): void {
   const sampleMenu = document.getElementById('sample-menu');
   const fontSelect = document.getElementById('font-select') as HTMLSelectElement;
   const sizeSlider = document.getElementById('size-slider') as HTMLInputElement;
+  const autoSizeBtn = document.getElementById('auto-size-btn');
   const sizeValueDisplay = document.getElementById('size-value');
   const themeToggle = document.getElementById('theme-toggle');
   const canvas = document.getElementById('main-canvas') as HTMLCanvasElement;
@@ -123,7 +123,7 @@ export function initApp(): void {
   // Load state: URL params override localStorage, then defaults (so shared links work)
   const urlState = getStateFromURL();
   const storageState = getStateFromStorage();
-  const defaults = { text: '', family: 'emoji', size: 50 };
+  const defaults = { text: '', family: 'emoji', size: null };
   const initial = mergeInitialState(urlState, storageState, defaults);
   state.text = initial.text;
   state.family = initial.family;
@@ -132,8 +132,7 @@ export function initApp(): void {
   // Apply to DOM and sync URL + storage so they match initial state
   textInput.value = state.text;
   fontSelect.value = state.family;
-  sizeSlider.value = state.size.toString();
-  if (sizeValueDisplay) sizeValueDisplay.textContent = `${state.size}px`;
+  syncSizeControls();
   pushStateToURL(state);
   saveStateToStorage(state);
 
@@ -226,10 +225,23 @@ export function initApp(): void {
     persistImmediate();
   });
 
-  sizeSlider.addEventListener('input', (e) => {
-    const val = parseInt((e.target as HTMLInputElement).value);
-    state.size = val;
-    if (sizeValueDisplay) sizeValueDisplay.textContent = `${val}px`;
+  function syncSizeControls(): void {
+    const isAuto = state.size === null;
+    autoSizeBtn?.setAttribute('aria-pressed', String(isAuto));
+    if (state.size !== null) sizeSlider.value = String(state.size);
+    if (sizeValueDisplay) sizeValueDisplay.textContent = isAuto ? '' : `${state.size}px`;
+  }
+
+  sizeSlider.addEventListener('input', () => {
+    state.size = sizeSlider.valueAsNumber;
+    syncSizeControls();
+    triggerRender();
+    persistImmediate();
+  });
+
+  autoSizeBtn?.addEventListener('click', () => {
+    state.size = null;
+    syncSizeControls();
     triggerRender();
     persistImmediate();
   });
@@ -264,11 +276,10 @@ export function initApp(): void {
     const urlState = getStateFromURL();
     if (urlState.text !== undefined) state.text = urlState.text;
     if (urlState.family !== undefined) state.family = urlState.family;
-    if (urlState.size !== undefined) state.size = urlState.size;
+    state.size = urlState.size ?? null;
     textInput.value = state.text;
     fontSelect.value = state.family;
-    sizeSlider.value = state.size.toString();
-    if (sizeValueDisplay) sizeValueDisplay.textContent = `${state.size}px`;
+    syncSizeControls();
     saveStateToStorage(state);
     syncCopyControls();
     triggerRender();

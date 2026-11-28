@@ -6,7 +6,7 @@ export interface FontDef {
 
 export interface AppState {
   text: string;
-  size: number;
+  size: number | null;
   family: string;
   theme: 'light' | 'dark';
 }
